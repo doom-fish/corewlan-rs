@@ -6,7 +6,7 @@
 #include <string.h>
 
 static void *cwrs_retain_obj(id obj) {
-    return obj ? CFBridgingRetain(obj) : NULL;
+    return obj ? (void *)CFBridgingRetain(obj) : NULL;
 }
 
 static void cwrs_set_error(void **error_out, NSError *error) {
@@ -149,7 +149,10 @@ void *cwrs_wifi_client_interface_names(void *client) {
     if ([wifiClient respondsToSelector:@selector(interfaceNames)]) {
         return cwrs_retain_obj([wifiClient interfaceNames]);
     }
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     return cwrs_retain_obj([CWWiFiClient interfaceNames]);
+#pragma clang diagnostic pop
 }
 
 bool cwrs_wifi_client_start_monitoring_event(void *client, NSInteger event_type, void **error_out) {
