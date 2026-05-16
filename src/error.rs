@@ -15,6 +15,10 @@ pub enum CoreWlanError {
         domain: String,
         description: String,
     },
+    OsStatusError {
+        operation: &'static str,
+        status: i32,
+    },
 }
 
 impl fmt::Display for CoreWlanError {
@@ -31,6 +35,9 @@ impl fmt::Display for CoreWlanError {
                 f,
                 "{operation} failed: {domain} ({code}) — {description}"
             ),
+            Self::OsStatusError { operation, status } => {
+                write!(f, "{operation} failed with OSStatus {status}")
+            }
         }
     }
 }

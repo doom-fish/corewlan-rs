@@ -1,6 +1,9 @@
 //! `CWChannel` wrapper.
 
-use crate::{object::RetainedObject, types::{ChannelBand, ChannelWidth}};
+use crate::{
+    object::RetainedObject,
+    security::{ChannelBand, ChannelWidth},
+};
 
 #[derive(Debug, Clone)]
 pub struct Channel {
@@ -31,3 +34,11 @@ impl Channel {
         unsafe { ChannelBand::from_raw(crate::ffi::cwrs_channel_band(self.as_raw())) }
     }
 }
+
+impl PartialEq for Channel {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe { crate::ffi::cwrs_channel_equal(self.as_raw(), other.as_raw()) }
+    }
+}
+
+impl Eq for Channel {}

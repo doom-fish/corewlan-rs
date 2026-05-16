@@ -1,4 +1,4 @@
-//! Internal helpers for retained Objective-C objects and collection marshaling.
+//! Internal helpers for retained bridge objects and collection marshaling.
 
 use crate::{error::CoreWlanError, ffi};
 use core::{ffi::c_char, ptr};
@@ -155,6 +155,14 @@ pub unsafe fn error_from_raw(operation: &'static str, error: ffi::Object) -> Cor
         code,
         domain,
         description,
+    }
+}
+
+pub const fn os_status_result(status: i32, operation: &'static str) -> crate::Result<()> {
+    if status == 0 {
+        Ok(())
+    } else {
+        Err(CoreWlanError::OsStatusError { operation, status })
     }
 }
 

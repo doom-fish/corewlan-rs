@@ -19,6 +19,6 @@ fn main() -> corewlan::Result<()> {
         println!("default interface: <none>");
     }
 
-    println!("✅ corewlan client + interface OK");
+    println!("✅ corewlan smoke OK");
     Ok(())
 }

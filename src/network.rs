@@ -1,6 +1,10 @@
 //! `CWNetwork` wrapper.
 
-use crate::{channel::Channel, object::{take_data_object, take_string_object, RetainedObject}, types::{PhyMode, Security}};
+use crate::{
+    channel::Channel,
+    object::{take_data_object, take_string_object, RetainedObject},
+    security::{PhyMode, Security},
+};
 
 #[derive(Debug, Clone)]
 pub struct Network {
@@ -76,3 +80,11 @@ impl Network {
         unsafe { crate::ffi::cwrs_network_supports_phy_mode(self.as_raw(), mode.as_raw()) }
     }
 }
+
+impl PartialEq for Network {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe { crate::ffi::cwrs_network_equal(self.as_raw(), other.as_raw()) }
+    }
+}
+
+impl Eq for Network {}

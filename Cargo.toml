@@ -1,11 +1,11 @@
 [package]
 name = "corewlan"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/doom-fish/corewlan-rs"
 repository = "https://github.com/doom-fish/corewlan-rs"
-description = "Safe Rust bindings for Apple's CoreWLAN framework — inspect Wi-Fi interfaces, scan results, and preferred network state on macOS"
+description = "Safe Rust bindings for Apple's CoreWLAN framework — inspect Wi-Fi interfaces, mutable configurations, event delegates, and preferred network state on macOS"
 authors = ["Per Johansson <per@doom.fish>"]
 keywords = ["wifi", "wlan", "corewlan", "macos", "networking"]
 categories = ["api-bindings", "os::macos-apis", "network-programming"]
@@ -15,11 +15,15 @@ build = "build.rs"
 include = [
     "src/**/*",
     "examples/**/*",
+    "tests/**/*",
+    "swift-bridge/Package.swift",
+    "swift-bridge/Sources/**/*",
     "build.rs",
     "Cargo.toml",
     "README.md",
     "LICENSE-*",
     "CHANGELOG.md",
+    "COVERAGE.md",
 ]
 
 [lints.rust]
@@ -33,10 +37,8 @@ cargo = { level = "warn", priority = -1 }
 name = "corewlan"
 crate-type = ["lib"]
 
-[build-dependencies]
-cc = "1"
-
 [dependencies]
+bitflags = "2"
 
 [package.metadata.docs.rs]
 all-features = true

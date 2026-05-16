@@ -4,10 +4,14 @@ use crate::{
     channel::Channel,
     configuration::Configuration,
     network::Network,
-    object::{bool_result, collect_set, error_from_raw, null_err, optional_ptr, take_data_object, take_string_object, to_c_string_bytes, RetainedObject},
-    types::{InterfaceMode, PhyMode, Security},
+    object::{
+        bool_result, collect_set, error_from_raw, null_err, optional_ptr, take_data_object,
+        take_string_object, to_c_string_bytes, RetainedObject,
+    },
+    security::{Authorization, CipherKeyFlags, Identity, InterfaceMode, PhyMode, Security},
     Result,
 };
+use core::ptr;
 
 #[derive(Debug, Clone)]
 pub struct Interface {
@@ -180,13 +184,13 @@ impl Interface {
         include_hidden: Option<bool>,
     ) -> Result<Vec<Network>> {
         let name_bytes = name.map(to_c_string_bytes);
-        let mut error = core::ptr::null_mut();
+        let mut error = ptr::null_mut();
         let raw = unsafe {
             crate::ffi::cwrs_interface_scan_for_networks_with_name(
                 self.as_raw(),
                 name_bytes
                     .as_ref()
-                    .map_or(core::ptr::null(), |value| value.as_ptr().cast()),
+                    .map_or(ptr::null(), |value| value.as_ptr().cast()),
                 include_hidden.unwrap_or(false),
                 include_hidden.is_some(),
                 &mut error,
@@ -214,7 +218,7 @@ impl Interface {
         include_hidden: Option<bool>,
     ) -> Result<Vec<Network>> {
         let (ssid_ptr, ssid_len) = optional_ptr(ssid);
-        let mut error = core::ptr::null_mut();
+        let mut error = ptr::null_mut();
         let raw = unsafe {
             crate::ffi::cwrs_interface_scan_for_networks_with_ssid(
                 self.as_raw(),
@@ -247,8 +251,147 @@ impl Interface {
     ///
     /// Returns any `NSError` reported by `CoreWLAN`.
     pub fn set_power(&self, power_on: bool) -> Result<()> {
-        let mut error = core::ptr::null_mut();
+        let mut error = ptr::null_mut();
         let ok = unsafe { crate::ffi::cwrs_interface_set_power(self.as_raw(), power_on, &mut error) };
         unsafe { bool_result(ok, error, "setPower:error:") }
+    }
+
+    /// Change the current Wi-Fi channel.
+    ///
+    /// # Errors
+    ///
+    /// Returns any `NSError` reported by `CoreWLAN`.
+    pub fn set_wlan_channel(&self, channel: &Channel) -> Result<()> {
+        let mut error = ptr::null_mut();
+        let ok = unsafe {
+            crate::ffi::cwrs_interface_set_wlan_channel(self.as_raw(), channel.as_raw(), &mut error)
+        };
+        unsafe { bool_result(ok, error, "setWLANChannel:error:") }
+    }
+
+    /// Set or clear the pairwise master key for the interface.
+    ///
+    /// # Errors
+    ///
+    /// Returns any `NSError` reported by `CoreWLAN`.
+    pub fn set_pairwise_master_key(&self, key: Option<&[u8]>) -> Result<()> {
+        let (key_ptr, key_len) = optional_ptr(key);
+        let mut error = ptr::null_mut();
+        let ok = unsafe {
+            crate::ffi::cwrs_interface_set_pairwise_master_key(
+                self.as_raw(),
+                key_ptr,
+                key_len,
+                &mut error,
+            )
+        };
+        unsafe { bool_result(ok, error, "setPairwiseMasterKey:error:") }
+    }
+
+    /// Set or clear the WEP key for the interface.
+    ///
+    /// # Errors
+    ///
+    /// Returns any `NSError` reported by `CoreWLAN`.
+    pub fn set_wep_key(
+        &self,
+        key: Option<&[u8]>,
+        flags: CipherKeyFlags,
+        index: isize,
+    ) -> Result<()> {
+        let (key_ptr, key_len) = optional_ptr(key);
+        let mut error = ptr::null_mut();
+        let ok = unsafe {
+            crate::ffi::cwrs_interface_set_wep_key(
+                self.as_raw(),
+                key_ptr,
+                key_len,
+                flags.bits(),
+                index,
+                &mut error,
+            )
+        };
+        unsafe { bool_result(ok, error, "setWEPKey:flags:index:error:") }
+    }
+
+    /// Associate to a network using an optional passphrase.
+    ///
+    /// # Errors
+    ///
+    /// Returns any `NSError` reported by `CoreWLAN`.
+    pub fn associate_to_network(&self, network: &Network, password: Option<&str>) -> Result<()> {
+        let password_bytes = password.map(to_c_string_bytes);
+        let mut error = ptr::null_mut();
+        let ok = unsafe {
+            crate::ffi::cwrs_interface_associate_to_network(
+                self.as_raw(),
+                network.as_raw(),
+                password_bytes
+                    .as_ref()
+                    .map_or(ptr::null(), |value| value.as_ptr().cast()),
+                &mut error,
+            )
+        };
+        unsafe { bool_result(ok, error, "associateToNetwork:password:error:") }
+    }
+
+    pub fn disassociate(&self) {
+        unsafe {
+            crate::ffi::cwrs_interface_disassociate(self.as_raw());
+        }
+    }
+
+    /// Associate to an enterprise network using optional 802.1X credentials.
+    ///
+    /// # Errors
+    ///
+    /// Returns any `NSError` reported by `CoreWLAN`.
+    pub fn associate_to_enterprise_network(
+        &self,
+        network: &Network,
+        identity: Option<&Identity>,
+        username: Option<&str>,
+        password: Option<&str>,
+    ) -> Result<()> {
+        let username_bytes = username.map(to_c_string_bytes);
+        let password_bytes = password.map(to_c_string_bytes);
+        let mut error = ptr::null_mut();
+        let ok = unsafe {
+            crate::ffi::cwrs_interface_associate_to_enterprise_network(
+                self.as_raw(),
+                network.as_raw(),
+                identity.map_or(ptr::null_mut(), Identity::as_raw),
+                username_bytes
+                    .as_ref()
+                    .map_or(ptr::null(), |value| value.as_ptr().cast()),
+                password_bytes
+                    .as_ref()
+                    .map_or(ptr::null(), |value| value.as_ptr().cast()),
+                &mut error,
+            )
+        };
+        unsafe { bool_result(ok, error, "associateToEnterpriseNetwork:identity:username:password:error:") }
+    }
+
+    /// Commit a configuration to disk for the interface.
+    ///
+    /// # Errors
+    ///
+    /// Returns any `NSError` reported by `CoreWLAN`.
+    pub fn commit_configuration(
+        &self,
+        configuration: &Configuration,
+        authorization: Option<&Authorization>,
+    ) -> Result<()> {
+        let mut error = ptr::null_mut();
+        let ok = unsafe {
+            crate::ffi::cwrs_interface_commit_configuration(
+                self.as_raw(),
+                configuration.as_raw(),
+                authorization.map_or(ptr::null_mut(), Authorization::as_raw),
+                &mut error,
+            )
+        };
+        unsafe { bool_result(ok, error, "commitConfiguration:authorization:error:") }
     }
 }

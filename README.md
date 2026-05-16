@@ -1,10 +1,17 @@
 # corewlan
 
-Safe Rust bindings for Apple's [CoreWLAN](https://developer.apple.com/documentation/corewlan) framework on macOS — inspect Wi-Fi interfaces, cached scan state, active link quality, and preferred network configuration.
+Safe Rust bindings for Apple's [CoreWLAN](https://developer.apple.com/documentation/corewlan) framework on macOS.
 
-> **Status:** experimental. v0.1 ships `CWWiFiClient`, `CWInterface`, `CWNetwork`, `CWChannel`, `CWConfiguration`, and `CWNetworkProfile`. The smoke example intentionally avoids active scans so it won't trigger location / Wi-Fi permission prompts.
+> **Status:** v0.2 ships the full class-based CoreWLAN surface across `CWWiFiClient`, `CWInterface`, `CWChannel`, `CWNetwork`, `CWConfiguration`, `CWMutableConfiguration`, `CWNetworkProfile`, `CWMutableNetworkProfile`, and `CWSecurity`, backed by a Swift bridge built with SwiftPM.
 
-Zero Swift bridge — this crate uses a small Objective-C shim compiled by `cc` and exposes a safe Rust surface on top.
+## Highlights
+
+- Shared and ephemeral `CWWiFiClient` access.
+- Read-only `CWInterface`, `CWNetwork`, `CWChannel`, `CWConfiguration`, and `CWNetworkProfile` snapshots.
+- Mutable configuration/profile builders via `CWMutableConfiguration` and `CWMutableNetworkProfile`.
+- Interface mutators for power, channel, keys, association, enterprise association, and configuration commits.
+- Rust delegate registration for `CWEventDelegate` notifications.
+- Typed wrappers for `CoreWLAN` enums, cipher flags, keychain utilities, error codes, and notification constants.
 
 ## Quick start
 
@@ -22,45 +29,40 @@ fn main() -> Result<()> {
         println!("ssid = {:?}", interface.ssid());
         println!("rssi = {} dBm", interface.rssi_value());
         println!("rate = {:.1} Mbps", interface.transmit_rate());
+
+        if let Some(configuration) = interface.configuration() {
+            println!("preferred networks = {}", configuration.network_profiles().len());
+        }
     }
 
     Ok(())
 }
 ```
 
-## Smoke example
+## Examples
 
 ```bash
 cargo run --example 01_smoke
+cargo run --example 02_wifi_client_events
+cargo run --example 07_mutable_configuration
 ```
 
-Expected output (values vary by machine):
-
-```text
-interfaces: ["en0"]
-default interface: en0
-ssid: Some("Your Wi-Fi")
-rssi: -58 dBm
-transmit rate: 702.0 Mbps
-✅ corewlan client + interface OK
-```
+The crate ships one numbered example per logical `CoreWLAN` area; see `examples/` for the full list.
 
 ## Notes
 
-- `Interface::scan_for_networks_*` methods call the blocking `CoreWLAN` scan APIs.
+- `Interface::scan_for_networks_*` wrappers call the blocking `CoreWLAN` scan APIs.
 - `Interface::cached_scan_results()` only returns the existing scan cache and does not initiate a scan.
-- SSID, BSSID, and country-code values may be `None` if Location Services access is unavailable.
-- `WiFiClient::start_monitoring_event` / `stop_monitoring_event` are included for parity with the public headers, but v0.1 does not yet expose Rust delegate callbacks.
+- SSID, BSSID, and country-code values may be unavailable without Location Services authorization.
+- Association, power, key, and configuration commit APIs may require administrator privileges or Wi-Fi entitlements; the corresponding tests are marked `#[ignore]`.
 
-## Roadmap
+## Coverage and verification
 
-- [x] `WiFiClient::{shared, interface_names, interfaces, interface_with_name}`
-- [x] `Interface` state queries + cached scan snapshot accessors
-- [x] Blocking scan wrappers (`scan_for_networks_with_name`, `scan_for_networks_with_ssid`)
-- [x] `Network`, `Channel`, `Configuration`, and `NetworkProfile` snapshots
-- [x] Event registration helpers without delegate callbacks
-- [ ] Rust event delegate bridge for `CWEventDelegate`
-- [ ] Association / configuration commit helpers
+- API audit: [`COVERAGE.md`](COVERAGE.md)
+- Validation command set:
+  - `cargo clippy --all-targets -- -D warnings`
+  - `cargo test`
+  - `for ex in examples/*.rs; do cargo run --example "$(basename "$ex" .rs)"; done`
 
 ## License
 

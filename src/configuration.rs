@@ -1,6 +1,10 @@
 //! `CWConfiguration` wrapper.
 
-use crate::{object::{collect_ordered_set, RetainedObject}, profile::NetworkProfile};
+use crate::{
+    error::CoreWlanError,
+    object::{collect_ordered_set, RetainedObject},
+    network_profile::NetworkProfile,
+};
 
 #[derive(Debug, Clone)]
 pub struct Configuration {
@@ -8,6 +12,28 @@ pub struct Configuration {
 }
 
 impl Configuration {
+    /// # Errors
+    ///
+    /// Returns an error if the framework unexpectedly returns `nil`.
+    pub fn new() -> crate::Result<Self> {
+        unsafe {
+            Self::from_owned_raw(crate::ffi::cwrs_configuration_new())
+                .ok_or(CoreWlanError::UnexpectedNull("[[CWConfiguration alloc] init]"))
+        }
+    }
+
+    /// # Errors
+    ///
+    /// Returns an error if copying the configuration unexpectedly yields `nil`.
+    pub fn from_configuration(configuration: &Self) -> crate::Result<Self> {
+        unsafe {
+            Self::from_owned_raw(crate::ffi::cwrs_configuration_with_configuration(
+                configuration.as_raw(),
+            ))
+            .ok_or(CoreWlanError::UnexpectedNull("[CWConfiguration copy]"))
+        }
+    }
+
     pub(crate) unsafe fn from_owned_raw(raw: crate::ffi::Object) -> Option<Self> {
         RetainedObject::from_owned_raw(raw).map(|obj| Self { obj })
     }
@@ -46,3 +72,17 @@ impl Configuration {
         unsafe { crate::ffi::cwrs_configuration_remember_joined_networks(self.as_raw()) }
     }
 }
+
+impl Default for Configuration {
+    fn default() -> Self {
+        Self::new().expect("CWConfiguration init returned nil")
+    }
+}
+
+impl PartialEq for Configuration {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe { crate::ffi::cwrs_configuration_equal(self.as_raw(), other.as_raw()) }
+    }
+}
+
+impl Eq for Configuration {}
