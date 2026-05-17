@@ -270,11 +270,7 @@ pub fn find_wifi_password(domain: KeychainDomain, ssid: &[u8]) -> crate::Result<
 /// # Errors
 ///
 /// Returns an `OSStatus` error if the password cannot be stored in the selected keychain domain.
-pub fn set_wifi_password(
-    domain: KeychainDomain,
-    ssid: &[u8],
-    password: &str,
-) -> crate::Result<()> {
+pub fn set_wifi_password(domain: KeychainDomain, ssid: &[u8], password: &str) -> crate::Result<()> {
     let (ssid_ptr, ssid_len) = optional_ptr(Some(ssid));
     let password = to_c_string_bytes(password);
     let status = unsafe {
@@ -319,10 +315,9 @@ pub fn find_wifi_eap_username_and_password(
         )
     };
     os_status_result(status, "CWKeychainFindWiFiEAPUsernameAndPassword")?;
-    Ok((
-        unsafe { take_string_object(username) },
-        unsafe { take_string_object(password) },
-    ))
+    Ok((unsafe { take_string_object(username) }, unsafe {
+        take_string_object(password)
+    }))
 }
 
 /// # Errors

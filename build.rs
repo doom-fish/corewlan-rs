@@ -21,9 +21,7 @@ fn main() {
     let swift_triple = match target_arch.as_str() {
         "x86_64" => "x86_64-apple-macosx",
         "aarch64" => "arm64-apple-macosx",
-        other => panic!(
-            "corewlan: unsupported target arch '{other}'. Expected x86_64 or aarch64."
-        ),
+        other => panic!("corewlan: unsupported target arch '{other}'. Expected x86_64 or aarch64."),
     };
 
     let output = Command::new("swift")
@@ -50,7 +48,10 @@ fn main() {
             "Swift build STDERR:\n{}",
             String::from_utf8_lossy(&output.stderr)
         );
-        panic!("Swift build failed with exit code: {:?}", output.status.code());
+        panic!(
+            "Swift build failed with exit code: {:?}",
+            output.status.code()
+        );
     }
 
     println!("cargo:rustc-link-search=native={swift_build_dir}/release");
@@ -66,8 +67,9 @@ fn main() {
     match Command::new("xcode-select").arg("-p").output() {
         Ok(output) if output.status.success() => {
             let xcode_path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            let legacy_runtime =
-                format!("{xcode_path}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.5/macosx");
+            let legacy_runtime = format!(
+                "{xcode_path}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.5/macosx"
+            );
             let runtime =
                 format!("{xcode_path}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx");
             println!("cargo:rustc-link-search=native={legacy_runtime}");

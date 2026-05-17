@@ -23,7 +23,6 @@ pub mod security;
 pub type Object = *mut c_void;
 
 pub use self::{
-    channel::*, client::*, configuration::*, core::*, interface::*,
-    mutable_configuration::*, mutable_network_profile::*, network::*,
-    network_profile::*, security::*,
+    channel::*, client::*, configuration::*, core::*, interface::*, mutable_configuration::*,
+    mutable_network_profile::*, network::*, network_profile::*, security::*,
 };

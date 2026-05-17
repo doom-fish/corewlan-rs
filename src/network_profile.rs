@@ -17,8 +17,9 @@ impl NetworkProfile {
     /// Returns an error if the framework unexpectedly returns `nil`.
     pub fn new() -> crate::Result<Self> {
         unsafe {
-            Self::from_owned_raw(crate::ffi::cwrs_network_profile_new())
-                .ok_or(CoreWlanError::UnexpectedNull("[[CWNetworkProfile alloc] init]"))
+            Self::from_owned_raw(crate::ffi::cwrs_network_profile_new()).ok_or(
+                CoreWlanError::UnexpectedNull("[[CWNetworkProfile alloc] init]"),
+            )
         }
     }
 

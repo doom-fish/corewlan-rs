@@ -52,7 +52,11 @@ impl Network {
 
     #[must_use]
     pub fn information_element_data(&self) -> Option<Vec<u8>> {
-        unsafe { take_data_object(crate::ffi::cwrs_network_information_element_data(self.as_raw())) }
+        unsafe {
+            take_data_object(crate::ffi::cwrs_network_information_element_data(
+                self.as_raw(),
+            ))
+        }
     }
 
     #[must_use]

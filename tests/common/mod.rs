@@ -4,7 +4,9 @@ use corewlan::{Channel, Interface, Network, WiFiClient};
 use std::sync::{Mutex, MutexGuard, OnceLock};
 
 pub fn default_interface() -> Option<Interface> {
-    WiFiClient::shared().ok().and_then(|client| client.interface())
+    WiFiClient::shared()
+        .ok()
+        .and_then(|client| client.interface())
 }
 
 pub fn first_channel() -> Option<Channel> {
@@ -21,5 +23,7 @@ pub fn first_network() -> Option<Network> {
 
 pub fn corewlan_test_lock() -> MutexGuard<'static, ()> {
     static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-    LOCK.get_or_init(|| Mutex::new(())).lock().expect("test lock poisoned")
+    LOCK.get_or_init(|| Mutex::new(()))
+        .lock()
+        .expect("test lock poisoned")
 }

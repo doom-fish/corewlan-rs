@@ -13,10 +13,16 @@ fn main() -> corewlan::Result<()> {
     client.start_monitoring_event(EventType::PowerDidChange)?;
     client.stop_monitoring_event(EventType::PowerDidChange)?;
     drop(registration);
-    println!("delegate still installed after stale drop: {}", client.has_delegate());
+    println!(
+        "delegate still installed after stale drop: {}",
+        client.has_delegate()
+    );
     drop(replacement);
 
-    println!("delegate installed after final drop: {}", client.has_delegate());
+    println!(
+        "delegate installed after final drop: {}",
+        client.has_delegate()
+    );
     println!("✅ wifi client delegate OK");
     Ok(())
 }

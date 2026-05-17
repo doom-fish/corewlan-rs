@@ -27,11 +27,13 @@ impl MutableConfiguration {
     /// Returns an error if creating the mutable copy unexpectedly yields `nil`.
     pub fn from_configuration(configuration: &Configuration) -> crate::Result<Self> {
         unsafe {
-            Configuration::from_owned_raw(crate::ffi::cwrs_mutable_configuration_with_configuration(
-                configuration.as_raw(),
-            ))
+            Configuration::from_owned_raw(
+                crate::ffi::cwrs_mutable_configuration_with_configuration(configuration.as_raw()),
+            )
             .map(|base| Self { base })
-            .ok_or(CoreWlanError::UnexpectedNull("[CWConfiguration mutableCopy]"))
+            .ok_or(CoreWlanError::UnexpectedNull(
+                "[CWConfiguration mutableCopy]",
+            ))
         }
     }
 
@@ -40,7 +42,10 @@ impl MutableConfiguration {
     }
 
     pub fn set_network_profiles(&self, profiles: &[NetworkProfile]) {
-        let raw_profiles = profiles.iter().map(NetworkProfile::as_raw).collect::<Vec<_>>();
+        let raw_profiles = profiles
+            .iter()
+            .map(NetworkProfile::as_raw)
+            .collect::<Vec<_>>();
         unsafe {
             crate::ffi::cwrs_mutable_configuration_set_network_profiles(
                 self.as_raw(),

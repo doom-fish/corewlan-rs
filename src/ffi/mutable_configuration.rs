@@ -12,10 +12,7 @@ extern "C" {
         configuration: Object,
         value: bool,
     );
-    pub fn cwrs_mutable_configuration_set_require_admin_power(
-        configuration: Object,
-        value: bool,
-    );
+    pub fn cwrs_mutable_configuration_set_require_admin_power(configuration: Object, value: bool);
     pub fn cwrs_mutable_configuration_set_require_admin_ibss_mode(
         configuration: Object,
         value: bool,

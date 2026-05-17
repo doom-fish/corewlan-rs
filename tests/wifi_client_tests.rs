@@ -18,7 +18,9 @@ fn wifi_client_shared_and_names_smoke() {
 fn wifi_client_delegate_round_trip() {
     let _lock = common::corewlan_test_lock();
     let client = WiFiClient::new().expect("client should exist");
-    let registration = client.set_delegate(TestDelegate).expect("delegate install should succeed");
+    let registration = client
+        .set_delegate(TestDelegate)
+        .expect("delegate install should succeed");
     assert!(client.has_delegate());
     drop(registration);
     assert!(!client.has_delegate());
@@ -28,8 +30,12 @@ fn wifi_client_delegate_round_trip() {
 fn dropping_stale_registration_keeps_current_delegate_installed() {
     let _lock = common::corewlan_test_lock();
     let client = WiFiClient::new().expect("client should exist");
-    let registration_one = client.set_delegate(TestDelegate).expect("first delegate install should succeed");
-    let registration_two = client.set_delegate(TestDelegate).expect("second delegate install should succeed");
+    let registration_one = client
+        .set_delegate(TestDelegate)
+        .expect("first delegate install should succeed");
+    let registration_two = client
+        .set_delegate(TestDelegate)
+        .expect("second delegate install should succeed");
 
     assert!(client.has_delegate());
     drop(registration_one);

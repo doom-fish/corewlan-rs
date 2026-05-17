@@ -31,10 +31,7 @@ impl fmt::Display for CoreWlanError {
                 code,
                 domain,
                 description,
-            } => write!(
-                f,
-                "{operation} failed: {domain} ({code}) — {description}"
-            ),
+            } => write!(f, "{operation} failed: {domain} ({code}) — {description}"),
             Self::OsStatusError { operation, status } => {
                 write!(f, "{operation} failed with OSStatus {status}")
             }

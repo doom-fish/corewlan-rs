@@ -7,8 +7,15 @@ use crate::{
     security::EventType,
     Result,
 };
-use core::{ffi::{c_char, c_void}, ptr};
-use std::{ffi::CStr, panic::{catch_unwind, AssertUnwindSafe}, sync::Arc};
+use core::{
+    ffi::{c_char, c_void},
+    ptr,
+};
+use std::{
+    ffi::CStr,
+    panic::{catch_unwind, AssertUnwindSafe},
+    sync::Arc,
+};
 
 #[allow(clippy::module_name_repetitions)]
 pub trait WiFiClientEventDelegate: Send + Sync {
@@ -56,14 +63,15 @@ fn copy_optional_string(raw: *const c_char) -> Option<String> {
     if raw.is_null() {
         None
     } else {
-        Some(unsafe { CStr::from_ptr(raw) }.to_string_lossy().into_owned())
+        Some(
+            unsafe { CStr::from_ptr(raw) }
+                .to_string_lossy()
+                .into_owned(),
+        )
     }
 }
 
-fn with_delegate(
-    context: *mut c_void,
-    callback: impl FnOnce(&dyn WiFiClientEventDelegate),
-) {
+fn with_delegate(context: *mut c_void, callback: impl FnOnce(&dyn WiFiClientEventDelegate)) {
     if context.is_null() {
         return;
     }
@@ -108,7 +116,10 @@ extern "C" fn bssid_did_change_callback(context: *mut c_void, interface_name: *c
     });
 }
 
-extern "C" fn country_code_did_change_callback(context: *mut c_void, interface_name: *const c_char) {
+extern "C" fn country_code_did_change_callback(
+    context: *mut c_void,
+    interface_name: *const c_char,
+) {
     with_delegate(context, |delegate| {
         delegate.country_code_did_change(copy_optional_string(interface_name));
     });
@@ -127,11 +138,7 @@ extern "C" fn link_quality_did_change_callback(
     transmit_rate: f64,
 ) {
     with_delegate(context, |delegate| {
-        delegate.link_quality_did_change(
-            copy_optional_string(interface_name),
-            rssi,
-            transmit_rate,
-        );
+        delegate.link_quality_did_change(copy_optional_string(interface_name), rssi, transmit_rate);
     });
 }
 
@@ -160,10 +167,9 @@ impl WiFiClient {
     /// Returns an error if the framework unexpectedly returns `nil`.
     pub fn shared() -> Result<Self> {
         unsafe {
-            Self::from_owned_raw(crate::ffi::cwrs_wifi_client_shared())
-                .ok_or(crate::error::CoreWlanError::UnexpectedNull(
-                    "+[CWWiFiClient sharedWiFiClient]",
-                ))
+            Self::from_owned_raw(crate::ffi::cwrs_wifi_client_shared()).ok_or(
+                crate::error::CoreWlanError::UnexpectedNull("+[CWWiFiClient sharedWiFiClient]"),
+            )
         }
     }
 
@@ -174,8 +180,9 @@ impl WiFiClient {
     /// Returns an error if the framework unexpectedly returns `nil`.
     pub fn new() -> Result<Self> {
         unsafe {
-            Self::from_owned_raw(crate::ffi::cwrs_wifi_client_new())
-                .ok_or(crate::error::CoreWlanError::UnexpectedNull("[[CWWiFiClient alloc] init]"))
+            Self::from_owned_raw(crate::ffi::cwrs_wifi_client_new()).ok_or(
+                crate::error::CoreWlanError::UnexpectedNull("[[CWWiFiClient alloc] init]"),
+            )
         }
     }
 
@@ -251,7 +258,9 @@ impl WiFiClient {
         let context = Arc::new(DelegateContext {
             delegate: Box::new(delegate),
         });
-        let user_data = Arc::into_raw(Arc::clone(&context)).cast_mut().cast::<c_void>();
+        let user_data = Arc::into_raw(Arc::clone(&context))
+            .cast_mut()
+            .cast::<c_void>();
 
         let ok = unsafe {
             crate::ffi::cwrs_wifi_client_set_delegate(

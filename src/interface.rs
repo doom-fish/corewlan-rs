@@ -40,10 +40,12 @@ impl Interface {
     #[must_use]
     pub fn supported_wlan_channels(&self) -> Vec<Channel> {
         unsafe {
-            collect_set(crate::ffi::cwrs_interface_supported_wlan_channels(self.as_raw()))
-                .into_iter()
-                .filter_map(|raw| Channel::from_owned_raw(raw))
-                .collect()
+            collect_set(crate::ffi::cwrs_interface_supported_wlan_channels(
+                self.as_raw(),
+            ))
+            .into_iter()
+            .filter_map(|raw| Channel::from_owned_raw(raw))
+            .collect()
         }
     }
 
@@ -120,10 +122,12 @@ impl Interface {
     #[must_use]
     pub fn cached_scan_results(&self) -> Vec<Network> {
         unsafe {
-            collect_set(crate::ffi::cwrs_interface_cached_scan_results(self.as_raw()))
-                .into_iter()
-                .filter_map(|raw| Network::from_owned_raw(raw))
-                .collect()
+            collect_set(crate::ffi::cwrs_interface_cached_scan_results(
+                self.as_raw(),
+            ))
+            .into_iter()
+            .filter_map(|raw| Network::from_owned_raw(raw))
+            .collect()
         }
     }
 
@@ -252,7 +256,8 @@ impl Interface {
     /// Returns any `NSError` reported by `CoreWLAN`.
     pub fn set_power(&self, power_on: bool) -> Result<()> {
         let mut error = ptr::null_mut();
-        let ok = unsafe { crate::ffi::cwrs_interface_set_power(self.as_raw(), power_on, &mut error) };
+        let ok =
+            unsafe { crate::ffi::cwrs_interface_set_power(self.as_raw(), power_on, &mut error) };
         unsafe { bool_result(ok, error, "setPower:error:") }
     }
 
@@ -370,7 +375,13 @@ impl Interface {
                 &mut error,
             )
         };
-        unsafe { bool_result(ok, error, "associateToEnterpriseNetwork:identity:username:password:error:") }
+        unsafe {
+            bool_result(
+                ok,
+                error,
+                "associateToEnterpriseNetwork:identity:username:password:error:",
+            )
+        }
     }
 
     /// Commit a configuration to disk for the interface.

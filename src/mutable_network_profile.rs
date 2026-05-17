@@ -1,10 +1,6 @@
 //! `CWMutableNetworkProfile` wrapper.
 
-use crate::{
-    error::CoreWlanError,
-    network_profile::NetworkProfile,
-    security::Security,
-};
+use crate::{error::CoreWlanError, network_profile::NetworkProfile, security::Security};
 use std::ops::Deref;
 
 #[derive(Debug, Clone)]
@@ -35,7 +31,9 @@ impl MutableNetworkProfile {
                 crate::ffi::cwrs_mutable_network_profile_with_network_profile(profile.as_raw()),
             )
             .map(|base| Self { base })
-            .ok_or(CoreWlanError::UnexpectedNull("[CWNetworkProfile mutableCopy]"))
+            .ok_or(CoreWlanError::UnexpectedNull(
+                "[CWNetworkProfile mutableCopy]",
+            ))
         }
     }
 
@@ -52,10 +50,7 @@ impl MutableNetworkProfile {
 
     pub fn set_security(&self, security: Security) {
         unsafe {
-            crate::ffi::cwrs_mutable_network_profile_set_security(
-                self.as_raw(),
-                security.as_raw(),
-            );
+            crate::ffi::cwrs_mutable_network_profile_set_security(self.as_raw(), security.as_raw());
         }
     }
 }

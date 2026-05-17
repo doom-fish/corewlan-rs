@@ -2,8 +2,8 @@
 
 use crate::{
     error::CoreWlanError,
-    object::{collect_ordered_set, RetainedObject},
     network_profile::NetworkProfile,
+    object::{collect_ordered_set, RetainedObject},
 };
 
 #[derive(Debug, Clone)]
@@ -17,8 +17,9 @@ impl Configuration {
     /// Returns an error if the framework unexpectedly returns `nil`.
     pub fn new() -> crate::Result<Self> {
         unsafe {
-            Self::from_owned_raw(crate::ffi::cwrs_configuration_new())
-                .ok_or(CoreWlanError::UnexpectedNull("[[CWConfiguration alloc] init]"))
+            Self::from_owned_raw(crate::ffi::cwrs_configuration_new()).ok_or(
+                CoreWlanError::UnexpectedNull("[[CWConfiguration alloc] init]"),
+            )
         }
     }
 
@@ -45,10 +46,12 @@ impl Configuration {
     #[must_use]
     pub fn network_profiles(&self) -> Vec<NetworkProfile> {
         unsafe {
-            collect_ordered_set(crate::ffi::cwrs_configuration_network_profiles(self.as_raw()))
-                .into_iter()
-                .filter_map(|raw| NetworkProfile::from_owned_raw(raw))
-                .collect()
+            collect_ordered_set(crate::ffi::cwrs_configuration_network_profiles(
+                self.as_raw(),
+            ))
+            .into_iter()
+            .filter_map(|raw| NetworkProfile::from_owned_raw(raw))
+            .collect()
         }
     }
 

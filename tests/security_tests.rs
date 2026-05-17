@@ -3,8 +3,8 @@ use corewlan::{
     link_did_change_notification, link_quality_did_change_notification,
     link_quality_notification_rssi_key, link_quality_notification_transmit_rate_key,
     merge_networks, mode_did_change_notification, power_did_change_notification,
-    scan_cache_did_update_notification, ssid_did_change_notification, CipherKeyFlags,
-    ErrorCode, EventType, InterfaceMode, PhyMode, Security,
+    scan_cache_did_update_notification, ssid_did_change_notification, CipherKeyFlags, ErrorCode,
+    EventType, InterfaceMode, PhyMode, Security,
 };
 
 #[test]

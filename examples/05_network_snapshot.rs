@@ -11,7 +11,10 @@ fn main() -> corewlan::Result<()> {
             println!("network ssid: {:?}", network.ssid());
             println!("network bssid: {:?}", network.bssid());
             println!("network rssi: {}", network.rssi_value());
-            println!("supports WPA2: {}", network.supports_security(Security::Wpa2Personal));
+            println!(
+                "supports WPA2: {}",
+                network.supports_security(Security::Wpa2Personal)
+            );
         }
         None => println!("no cached scan results available"),
     }

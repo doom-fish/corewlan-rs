@@ -147,8 +147,8 @@ pub unsafe fn error_from_raw(operation: &'static str, error: ffi::Object) -> Cor
     let code = ffi::cwrs_error_code(error);
     let domain = take_c_string(ffi::cwrs_error_domain(error))
         .unwrap_or_else(|| "NSCocoaErrorDomain".to_owned());
-    let description = take_c_string(ffi::cwrs_error_description(error))
-        .unwrap_or_else(|| operation.to_owned());
+    let description =
+        take_c_string(ffi::cwrs_error_description(error)).unwrap_or_else(|| operation.to_owned());
     ffi::cwrs_release(error);
     CoreWlanError::ObjectiveCError {
         operation,

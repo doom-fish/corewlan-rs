@@ -7,7 +7,10 @@ fn main() -> corewlan::Result<()> {
         .and_then(|interface| interface.configuration())
         .unwrap_or_else(Configuration::default);
 
-    println!("preferred networks: {}", configuration.network_profiles().len());
+    println!(
+        "preferred networks: {}",
+        configuration.network_profiles().len()
+    );
     println!(
         "require admin for association: {}",
         configuration.require_administrator_for_association()
