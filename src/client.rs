@@ -85,9 +85,13 @@ extern "C" fn delegate_release_context(context: *mut c_void) {
         return;
     }
 
-    unsafe {
+    // This runs from Swift's delegate-bridge `deinit`, and dropping the
+    // `Arc<DelegateContext>` invokes the user delegate's `Drop`. Guard against a
+    // panic unwinding across the `extern "C"` boundary (UB), mirroring the
+    // callback dispatch in `with_delegate`.
+    let _ = catch_unwind(AssertUnwindSafe(|| unsafe {
         drop(Arc::from_raw(context.cast::<DelegateContext>()));
-    }
+    }));
 }
 
 extern "C" fn client_connection_interrupted_callback(context: *mut c_void) {
