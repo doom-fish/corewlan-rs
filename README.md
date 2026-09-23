@@ -2,7 +2,14 @@
 
 Safe Rust bindings for Apple's [CoreWLAN](https://developer.apple.com/documentation/corewlan) framework on macOS.
 
-> **Status:** v0.2 ships the full class-based CoreWLAN surface across `CWWiFiClient`, `CWInterface`, `CWChannel`, `CWNetwork`, `CWConfiguration`, `CWMutableConfiguration`, `CWNetworkProfile`, `CWMutableNetworkProfile`, and `CWSecurity`, backed by a Swift bridge built with SwiftPM.
+> **Status:** v0.3 ships the full class-based CoreWLAN surface across `CWWiFiClient`, `CWInterface`, `CWChannel`, `CWNetwork`, `CWConfiguration`, `CWMutableConfiguration`, `CWNetworkProfile`, `CWMutableNetworkProfile`, and `CWSecurity`, backed by a Swift bridge built with SwiftPM.
+
+## Installation
+
+```toml
+[dependencies]
+corewlan = "0.3"
+```
 
 ## Requirements
 
@@ -67,17 +74,17 @@ The crate ships one numbered example per logical `CoreWLAN` area; see `examples/
 macOS withholds the SSID, BSSID, and country code unless Location Services is enabled and the calling app is authorized. `Interface::ssid`, `ssid_data`, `bssid`, and `country_code` therefore return `Result<Option<_>>`:
 
 - `Ok(Some(value))`: the value is available.
-- `Ok(None)`: the interface is not participating in a network (for `country_code`: the interface is off), or CoreWLAN has no value even though access is authorized.
+- `Ok(None)`: the interface is not participating in a network (for `country_code`: the interface is off), or `CoreWLAN` has no value even though access is authorized.
 - `Err(CoreWlanError::LocationNotAuthorized(status))`: the interface is associated (for `country_code`: powered on) but the process has no Location Services authorization.
 
-`location_authorization()` returns the current CoreLocation status and never prompts. This crate does not request authorization: an app that needs these values must request it through CoreLocation and declare `NSLocationWhenInUseUsageDescription` (`NSLocationUsageDescription` on older macOS) in its `Info.plist`. Scan results are affected too: without authorization `Network::bssid()` is `None`.
+`location_authorization()` returns the current `CoreLocation` status and never prompts. This crate does not request authorization: an app that needs these values must request it through `CoreLocation` and declare `NSLocationWhenInUseUsageDescription` (`NSLocationUsageDescription` on older macOS) in its `Info.plist`. Scan results are affected too: without authorization `Network::bssid()` is `None`.
 
 ## Credentials
 
-- Passwords and usernames that contain a NUL byte are rejected with `CoreWlanError::InteriorNul` before CoreWLAN is called; they are never truncated or stripped.
+- Passwords and usernames that contain a NUL byte are rejected with `CoreWlanError::InteriorNul` before `CoreWLAN` is called; they are never truncated or stripped.
 - Credential strings are copied into buffers that are wiped once the call returns.
 - `find_wifi_password` and `find_wifi_eap_username_and_password` return passwords as `SecretString`: `Debug` prints `<redacted>`, the buffer is wiped on drop, and `expose()` borrows the value.
-- Copies that Foundation and CoreWLAN make internally are outside this crate's control.
+- Copies that Foundation and `CoreWLAN` make internally are outside this crate's control.
 
 ## Notes
 
