@@ -264,7 +264,7 @@ pub fn find_wifi_password(
             domain.as_raw(),
             ssid_ptr,
             ssid_len,
-            &mut password,
+            &raw mut password,
         )
     };
     let password = unsafe { take_secret_string_object(password) };
@@ -316,8 +316,8 @@ pub fn find_wifi_eap_username_and_password(
             domain.as_raw(),
             ssid_ptr,
             ssid_len,
-            &mut username,
-            &mut password,
+            &raw mut username,
+            &raw mut password,
         )
     };
     let username = unsafe { take_string_object(username) };
@@ -387,7 +387,7 @@ pub fn copy_wifi_eap_identity(
             domain.as_raw(),
             ssid_ptr,
             ssid_len,
-            &mut identity,
+            &raw mut identity,
         )
     };
     os_status_result(status, "CWKeychainCopyWiFiEAPIdentity")?;
@@ -419,7 +419,7 @@ pub fn set_wifi_eap_identity(
 /// Returns an `OSStatus` error if the process cannot enumerate available EAP identities.
 pub fn copy_eap_identity_list() -> crate::Result<Vec<Identity>> {
     let mut identities = ptr::null_mut();
-    let status = unsafe { crate::ffi::cwrs_keychain_copy_eap_identity_list(&mut identities) };
+    let status = unsafe { crate::ffi::cwrs_keychain_copy_eap_identity_list(&raw mut identities) };
     os_status_result(status, "CWKeychainCopyEAPIdentityList")?;
     Ok(unsafe {
         collect_array(identities)

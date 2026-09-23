@@ -75,7 +75,7 @@ pub unsafe fn take_data_object(raw: ffi::Object) -> Option<Vec<u8>> {
     }
 
     let mut len = 0usize;
-    let bytes = ffi::cwrs_data_copy_bytes(raw, &mut len);
+    let bytes = ffi::cwrs_data_copy_bytes(raw, &raw mut len);
     ffi::cwrs_release(raw);
     take_data_buffer(bytes, len)
 }

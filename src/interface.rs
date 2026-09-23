@@ -206,7 +206,7 @@ impl Interface {
                 name.as_ref().map_or(ptr::null(), |name| name.as_ptr()),
                 include_hidden.unwrap_or(false),
                 include_hidden.is_some(),
-                &mut error,
+                &raw mut error,
             )
         };
 
@@ -239,7 +239,7 @@ impl Interface {
                 ssid_len,
                 include_hidden.unwrap_or(false),
                 include_hidden.is_some(),
-                &mut error,
+                &raw mut error,
             )
         };
 
@@ -265,8 +265,9 @@ impl Interface {
     /// Returns any `NSError` reported by `CoreWLAN`.
     pub fn set_power(&self, power_on: bool) -> Result<()> {
         let mut error = ptr::null_mut();
-        let ok =
-            unsafe { crate::ffi::cwrs_interface_set_power(self.as_raw(), power_on, &mut error) };
+        let ok = unsafe {
+            crate::ffi::cwrs_interface_set_power(self.as_raw(), power_on, &raw mut error)
+        };
         unsafe { bool_result(ok, error, "setPower:error:") }
     }
 
@@ -278,7 +279,11 @@ impl Interface {
     pub fn set_wlan_channel(&self, channel: &Channel) -> Result<()> {
         let mut error = ptr::null_mut();
         let ok = unsafe {
-            crate::ffi::cwrs_interface_set_wlan_channel(self.as_raw(), channel.as_raw(), &mut error)
+            crate::ffi::cwrs_interface_set_wlan_channel(
+                self.as_raw(),
+                channel.as_raw(),
+                &raw mut error,
+            )
         };
         unsafe { bool_result(ok, error, "setWLANChannel:error:") }
     }
@@ -296,7 +301,7 @@ impl Interface {
                 self.as_raw(),
                 key_ptr,
                 key_len,
-                &mut error,
+                &raw mut error,
             )
         };
         unsafe { bool_result(ok, error, "setPairwiseMasterKey:error:") }
@@ -322,7 +327,7 @@ impl Interface {
                 key_len,
                 flags.bits(),
                 index,
-                &mut error,
+                &raw mut error,
             )
         };
         unsafe { bool_result(ok, error, "setWEPKey:flags:index:error:") }
@@ -343,7 +348,7 @@ impl Interface {
                 self.as_raw(),
                 network.as_raw(),
                 password.as_ref().map_or(ptr::null(), SecretCString::as_ptr),
-                &mut error,
+                &raw mut error,
             )
         };
         unsafe { bool_result(ok, error, "associateToNetwork:password:error:") }
@@ -381,7 +386,7 @@ impl Interface {
                 identity.map_or(ptr::null_mut(), Identity::as_raw),
                 username.as_ref().map_or(ptr::null(), SecretCString::as_ptr),
                 password.as_ref().map_or(ptr::null(), SecretCString::as_ptr),
-                &mut error,
+                &raw mut error,
             )
         };
         unsafe {
@@ -409,7 +414,7 @@ impl Interface {
                 self.as_raw(),
                 configuration.as_raw(),
                 authorization.map_or(ptr::null_mut(), Authorization::as_raw),
-                &mut error,
+                &raw mut error,
             )
         };
         unsafe { bool_result(ok, error, "commitConfiguration:authorization:error:") }

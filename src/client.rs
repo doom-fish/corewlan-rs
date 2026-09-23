@@ -304,7 +304,7 @@ impl WiFiClient {
             crate::ffi::cwrs_wifi_client_start_monitoring_event(
                 self.as_raw(),
                 event_type.as_raw(),
-                &mut error,
+                &raw mut error,
             )
         };
         unsafe { bool_result(ok, error, "startMonitoringEventWithType:error:") }
@@ -321,7 +321,7 @@ impl WiFiClient {
             crate::ffi::cwrs_wifi_client_stop_monitoring_event(
                 self.as_raw(),
                 event_type.as_raw(),
-                &mut error,
+                &raw mut error,
             )
         };
         unsafe { bool_result(ok, error, "stopMonitoringEventWithType:error:") }
@@ -335,7 +335,7 @@ impl WiFiClient {
     pub fn stop_monitoring_all_events(&self) -> Result<()> {
         let mut error = ptr::null_mut();
         let ok = unsafe {
-            crate::ffi::cwrs_wifi_client_stop_monitoring_all_events(self.as_raw(), &mut error)
+            crate::ffi::cwrs_wifi_client_stop_monitoring_all_events(self.as_raw(), &raw mut error)
         };
         unsafe { bool_result(ok, error, "stopMonitoringAllEventsAndReturnError:") }
     }
