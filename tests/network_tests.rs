@@ -7,9 +7,18 @@ fn network_snapshot_and_equality() {
     if let Some(network) = common::first_network() {
         let clone = network.clone();
         assert_eq!(network, clone);
-        let _ = network.ssid();
-        let _ = network.bssid();
-        let _ = network.wlan_channel();
-        let _ = network.supports_security(Security::Wpa2Personal);
+        if let Some(ssid) = network.ssid_data() {
+            assert!(ssid.len() <= 32);
+        }
+        if let Some(bssid) = network.bssid() {
+            assert_eq!(bssid.split(':').count(), 6);
+        }
+        if let Some(channel) = network.wlan_channel() {
+            assert!(channel.channel_number() > 0);
+        }
+        assert_eq!(
+            clone.supports_security(Security::Wpa2Personal),
+            network.supports_security(Security::Wpa2Personal)
+        );
     }
 }

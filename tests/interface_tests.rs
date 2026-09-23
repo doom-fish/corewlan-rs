@@ -1,15 +1,80 @@
 mod common;
 
-use corewlan::CoreWlanError;
+use corewlan::{location_authorization, CoreWlanError, InterfaceMode, LocationAuthorization};
+
+fn is_mac_address(value: &str) -> bool {
+    let octets = value.split(':').collect::<Vec<_>>();
+    octets.len() == 6
+        && octets
+            .iter()
+            .all(|octet| octet.len() == 2 && octet.chars().all(|c| c.is_ascii_hexdigit()))
+}
 
 #[test]
 fn interface_read_only_snapshot_smoke() {
     if let Some(interface) = common::default_interface() {
-        let _ = interface.interface_name();
-        let _ = interface.power_on();
-        let _ = interface.interface_mode();
-        let _ = interface.hardware_address();
-        let _ = interface.configuration();
+        let name = interface
+            .interface_name()
+            .expect("the default interface has a BSD name");
+        assert!(!name.is_empty());
+        if let Some(address) = interface.hardware_address() {
+            assert!(
+                is_mac_address(&address),
+                "unexpected hardware address format"
+            );
+        }
+        if !interface.power_on() {
+            assert_eq!(interface.interface_mode(), InterfaceMode::None);
+        }
+        if interface.interface_mode() == InterfaceMode::None {
+            assert_eq!(interface.rssi_value(), 0);
+        }
+    }
+}
+
+#[test]
+fn location_authorization_reports_a_core_location_status() {
+    assert!(!matches!(
+        location_authorization(),
+        LocationAuthorization::Unknown(_)
+    ));
+}
+
+#[test]
+fn location_gated_reads_distinguish_missing_authorization() {
+    if let Some(interface) = common::default_interface() {
+        let associated = interface.interface_mode() != InterfaceMode::None;
+        let authorized = location_authorization().is_authorized();
+
+        for result in [
+            interface.ssid().map(|ssid| ssid.map(String::into_bytes)),
+            interface.ssid_data(),
+            interface.bssid().map(|bssid| bssid.map(String::into_bytes)),
+        ] {
+            match result {
+                Ok(Some(value)) => assert!(associated && !value.is_empty()),
+                Ok(None) => assert!(!associated || authorized),
+                Err(CoreWlanError::LocationNotAuthorized(status)) => {
+                    assert!(associated);
+                    assert!(!status.is_authorized());
+                }
+                Err(other) => panic!("unexpected error: {other}"),
+            }
+        }
+
+        if let Ok(Some(bssid)) = interface.bssid() {
+            assert!(is_mac_address(&bssid));
+        }
+
+        match interface.country_code() {
+            Ok(Some(code)) => assert!(interface.power_on() && !code.is_empty()),
+            Ok(None) => assert!(!interface.power_on() || authorized),
+            Err(CoreWlanError::LocationNotAuthorized(status)) => {
+                assert!(interface.power_on());
+                assert!(!status.is_authorized());
+            }
+            Err(other) => panic!("unexpected error: {other}"),
+        }
     }
 }
 

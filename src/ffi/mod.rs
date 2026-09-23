@@ -14,6 +14,7 @@ pub mod client;
 pub mod configuration;
 pub mod core;
 pub mod interface;
+pub mod location;
 pub mod mutable_configuration;
 pub mod mutable_network_profile;
 pub mod network;
@@ -23,6 +24,7 @@ pub mod security;
 pub type Object = *mut c_void;
 
 pub use self::{
-    channel::*, client::*, configuration::*, core::*, interface::*, mutable_configuration::*,
-    mutable_network_profile::*, network::*, network_profile::*, security::*,
+    channel::*, client::*, configuration::*, core::*, interface::*, location::*,
+    mutable_configuration::*, mutable_network_profile::*, network::*, network_profile::*,
+    security::*,
 };

@@ -1,5 +1,6 @@
 //! Errors returned by the `corewlan` crate.
 
+use crate::location::LocationAuthorization;
 use core::fmt;
 
 pub type Result<T> = std::result::Result<T, CoreWlanError>;
@@ -20,6 +21,7 @@ pub enum CoreWlanError {
         status: i32,
     },
     InteriorNul(&'static str),
+    LocationNotAuthorized(LocationAuthorization),
 }
 
 impl fmt::Display for CoreWlanError {
@@ -39,6 +41,10 @@ impl fmt::Display for CoreWlanError {
             Self::InteriorNul(argument) => {
                 write!(f, "{argument} contains an interior NUL byte")
             }
+            Self::LocationNotAuthorized(status) => write!(
+                f,
+                "Location Services authorization is required to read this value (status: {status:?})"
+            ),
         }
     }
 }

@@ -4,6 +4,7 @@ use crate::{
     channel::Channel,
     configuration::Configuration,
     error::CoreWlanError,
+    location::location_authorization,
     network::Network,
     object::{
         bool_result, collect_set, error_from_raw, null_err, optional_ptr, take_data_object,
@@ -62,19 +63,22 @@ impl Interface {
         unsafe { PhyMode::from_raw(crate::ffi::cwrs_interface_active_phy_mode(self.as_raw())) }
     }
 
-    #[must_use]
-    pub fn ssid(&self) -> Option<String> {
-        unsafe { take_string_object(crate::ffi::cwrs_interface_ssid(self.as_raw())) }
+    #[allow(clippy::missing_errors_doc)]
+    pub fn ssid(&self) -> Result<Option<String>> {
+        let ssid = unsafe { take_string_object(crate::ffi::cwrs_interface_ssid(self.as_raw())) };
+        location_gated(ssid, self.interface_mode() != InterfaceMode::None)
     }
 
-    #[must_use]
-    pub fn ssid_data(&self) -> Option<Vec<u8>> {
-        unsafe { take_data_object(crate::ffi::cwrs_interface_ssid_data(self.as_raw())) }
+    #[allow(clippy::missing_errors_doc)]
+    pub fn ssid_data(&self) -> Result<Option<Vec<u8>>> {
+        let ssid = unsafe { take_data_object(crate::ffi::cwrs_interface_ssid_data(self.as_raw())) };
+        location_gated(ssid, self.interface_mode() != InterfaceMode::None)
     }
 
-    #[must_use]
-    pub fn bssid(&self) -> Option<String> {
-        unsafe { take_string_object(crate::ffi::cwrs_interface_bssid(self.as_raw())) }
+    #[allow(clippy::missing_errors_doc)]
+    pub fn bssid(&self) -> Result<Option<String>> {
+        let bssid = unsafe { take_string_object(crate::ffi::cwrs_interface_bssid(self.as_raw())) };
+        location_gated(bssid, self.interface_mode() != InterfaceMode::None)
     }
 
     #[must_use]
@@ -97,9 +101,11 @@ impl Interface {
         unsafe { crate::ffi::cwrs_interface_transmit_rate(self.as_raw()) }
     }
 
-    #[must_use]
-    pub fn country_code(&self) -> Option<String> {
-        unsafe { take_string_object(crate::ffi::cwrs_interface_country_code(self.as_raw())) }
+    #[allow(clippy::missing_errors_doc)]
+    pub fn country_code(&self) -> Result<Option<String>> {
+        let country_code =
+            unsafe { take_string_object(crate::ffi::cwrs_interface_country_code(self.as_raw())) };
+        location_gated(country_code, self.power_on())
     }
 
     #[must_use]
@@ -407,5 +413,18 @@ impl Interface {
             )
         };
         unsafe { bool_result(ok, error, "commitConfiguration:authorization:error:") }
+    }
+}
+
+fn location_gated<T>(value: Option<T>, gated_by_location: bool) -> Result<Option<T>> {
+    if value.is_some() || !gated_by_location {
+        return Ok(value);
+    }
+
+    let status = location_authorization();
+    if status.is_authorized() {
+        Ok(None)
+    } else {
+        Err(CoreWlanError::LocationNotAuthorized(status))
     }
 }
