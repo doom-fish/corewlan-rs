@@ -8,6 +8,8 @@ COVERAGE_PCT: 100.00
 
 Enumeration derived by parsing CoreWLAN framework headers in MacOSX26.2.sdk: CoreWLANConstants.h (11 FOUNDATION_EXTERN constants), CoreWLANTypes.h (10 typedef enums/options), CoreWLANUtil.h (18 C functions), plus Objective-C interfaces and their properties/methods from CWChannel.h, CWConfiguration.h, CWInterface.h, CWNetwork.h, CWNetworkProfile.h, and CWWiFiClient.h. All 26 exempts were re-verified against SDK 26.2 headers for deprecation attributes. Zero gaps confirmed — all non-deprecated public symbols have safe-wrapper equivalents in the crate.
 
+_Re-checked on 2026-09-23 against the installed MacOSX26.5.sdk CoreWLAN headers: every declared method, property, constant, and function name still appears in the tables below. The counts are per header symbol; they do not measure runtime behavior, such as the Location Services gating of `ssid`, `bssid`, and `countryCode`._
+
 ## 🟢 VERIFIED
 | Symbol | Kind | Header | Wrapped by |
 | --- | --- | --- | --- |

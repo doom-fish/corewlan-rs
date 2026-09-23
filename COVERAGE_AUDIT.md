@@ -8,6 +8,8 @@ COVERAGE_PCT: 100.00%
 
 _Deprecated CoreWLAN symbols are listed as EXEMPT even when the crate exposes them, because the audit instructions explicitly remove deprecated APIs from the coverage denominator._
 
+_Re-checked on 2026-09-23 against the installed MacOSX26.5.sdk CoreWLAN headers: every declared method, property, constant, and function name still appears in the tables below. The counts are per header symbol; they do not measure runtime behavior, such as the Location Services gating of `ssid`, `bssid`, and `countryCode`._
+
 ## 🟢 VERIFIED
 | Symbol | Kind | Header | Wrapped by |
 | --- | --- | --- | --- |

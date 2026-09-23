@@ -48,14 +48,14 @@ Legend:
 - ✅ `supportedWLANChannels` → `Interface::supported_wlan_channels`
 - ✅ `wlanChannel` → `Interface::wlan_channel`
 - ✅ `activePHYMode` → `Interface::active_phy_mode`
-- ✅ `ssid` → `Interface::ssid`
-- ✅ `ssidData` → `Interface::ssid_data`
-- ✅ `bssid` → `Interface::bssid`
+- ✅ `ssid` → `Interface::ssid` (`Err(LocationNotAuthorized)` when withheld for lack of Location Services authorization)
+- ✅ `ssidData` → `Interface::ssid_data` (same Location rule)
+- ✅ `bssid` → `Interface::bssid` (same Location rule)
 - ✅ `rssiValue` → `Interface::rssi_value`
 - ✅ `noiseMeasurement` → `Interface::noise_measurement`
 - ✅ `security` → `Interface::security`
 - ✅ `transmitRate` → `Interface::transmit_rate`
-- ✅ `countryCode` → `Interface::country_code`
+- ✅ `countryCode` → `Interface::country_code` (same Location rule, gated on power)
 - ✅ `interfaceMode` → `Interface::interface_mode`
 - ✅ `transmitPower` → `Interface::transmit_power`
 - ✅ `hardwareAddress` → `Interface::hardware_address`
@@ -160,10 +160,10 @@ Legend:
 
 ## CoreWLANUtil.h
 
-- ✅ `CWKeychainFindWiFiPassword` → `security::find_wifi_password`
+- ✅ `CWKeychainFindWiFiPassword` → `security::find_wifi_password` (returns `SecretString`)
 - ✅ `CWKeychainSetWiFiPassword` → `security::set_wifi_password`
 - ✅ `CWKeychainDeleteWiFiPassword` → `security::delete_wifi_password`
-- ✅ `CWKeychainFindWiFiEAPUsernameAndPassword` → `security::find_wifi_eap_username_and_password`
+- ✅ `CWKeychainFindWiFiEAPUsernameAndPassword` → `security::find_wifi_eap_username_and_password` (password as `SecretString`)
 - ✅ `CWKeychainSetWiFiEAPUsernameAndPassword` → `security::set_wifi_eap_username_and_password`
 - ✅ `CWKeychainDeleteWiFiEAPUsernameAndPassword` → `security::delete_wifi_eap_username_and_password`
 - ✅ `CWKeychainCopyWiFiEAPIdentity` → `security::copy_wifi_eap_identity`
@@ -178,3 +178,7 @@ Legend:
 - ⏭️ `CWKeychainCopyPassword` — deprecated on macOS 10.9
 - ⏭️ `CWKeychainDeletePassword` — deprecated on macOS 10.9
 - ✅ `CWMergeNetworks` → `security::merge_networks`
+
+## Outside CoreWLAN
+
+- ✅ `CLLocationManager.locationServicesEnabled` / `authorizationStatus` → `location_authorization` (status only; the crate never requests authorization)

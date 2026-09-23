@@ -4,6 +4,11 @@ Safe Rust bindings for Apple's [CoreWLAN](https://developer.apple.com/documentat
 
 > **Status:** v0.2 ships the full class-based CoreWLAN surface across `CWWiFiClient`, `CWInterface`, `CWChannel`, `CWNetwork`, `CWConfiguration`, `CWMutableConfiguration`, `CWNetworkProfile`, `CWMutableNetworkProfile`, and `CWSecurity`, backed by a Swift bridge built with SwiftPM.
 
+## Requirements
+
+- macOS 10.13 or later (the Swift bridge's deployment target).
+- Xcode or the Command Line Tools, so `build.rs` can run `swift build`.
+
 ## Highlights
 
 - Shared and ephemeral `CWWiFiClient` access.
@@ -12,6 +17,8 @@ Safe Rust bindings for Apple's [CoreWLAN](https://developer.apple.com/documentat
 - Interface mutators for power, channel, keys, association, enterprise association, and configuration commits.
 - Rust delegate registration for `CWEventDelegate` notifications.
 - Typed wrappers for `CoreWLAN` enums, cipher flags, keychain utilities, error codes, and notification constants.
+- `location_authorization()` reports the Location Services status that gates SSID, BSSID, and country-code reads.
+- Credentials are checked for NUL bytes, passed through buffers that are wiped after the call, and returned as `SecretString`.
 
 ## Quick start
 
@@ -26,7 +33,13 @@ fn main() -> Result<()> {
     }
 
     if let Some(interface) = client.interface() {
-        println!("ssid = {:?}", interface.ssid());
+        match interface.ssid() {
+            Ok(ssid) => println!("ssid = {ssid:?}"),
+            Err(CoreWlanError::LocationNotAuthorized(status)) => {
+                println!("ssid needs Location Services authorization ({status:?})");
+            }
+            Err(error) => return Err(error),
+        }
         println!("rssi = {} dBm", interface.rssi_value());
         println!("rate = {:.1} Mbps", interface.transmit_rate());
 
@@ -49,11 +62,27 @@ cargo run --example 07_mutable_configuration
 
 The crate ships one numbered example per logical `CoreWLAN` area; see `examples/` for the full list.
 
+## Location Services
+
+macOS withholds the SSID, BSSID, and country code unless Location Services is enabled and the calling app is authorized. `Interface::ssid`, `ssid_data`, `bssid`, and `country_code` therefore return `Result<Option<_>>`:
+
+- `Ok(Some(value))`: the value is available.
+- `Ok(None)`: the interface is not participating in a network (for `country_code`: the interface is off), or CoreWLAN has no value even though access is authorized.
+- `Err(CoreWlanError::LocationNotAuthorized(status))`: the interface is associated (for `country_code`: powered on) but the process has no Location Services authorization.
+
+`location_authorization()` returns the current CoreLocation status and never prompts. This crate does not request authorization: an app that needs these values must request it through CoreLocation and declare `NSLocationWhenInUseUsageDescription` (`NSLocationUsageDescription` on older macOS) in its `Info.plist`. Scan results are affected too: without authorization `Network::bssid()` is `None`.
+
+## Credentials
+
+- Passwords and usernames that contain a NUL byte are rejected with `CoreWlanError::InteriorNul` before CoreWLAN is called; they are never truncated or stripped.
+- Credential strings are copied into buffers that are wiped once the call returns.
+- `find_wifi_password` and `find_wifi_eap_username_and_password` return passwords as `SecretString`: `Debug` prints `<redacted>`, the buffer is wiped on drop, and `expose()` borrows the value.
+- Copies that Foundation and CoreWLAN make internally are outside this crate's control.
+
 ## Notes
 
 - `Interface::scan_for_networks_*` wrappers call the blocking `CoreWLAN` scan APIs.
 - `Interface::cached_scan_results()` only returns the existing scan cache and does not initiate a scan.
-- SSID, BSSID, and country-code values may be unavailable without Location Services authorization.
 - Association, power, key, and configuration commit APIs may require administrator privileges or Wi-Fi entitlements; the corresponding tests are marked `#[ignore]`.
 
 ## Coverage and verification
