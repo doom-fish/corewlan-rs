@@ -1,5 +1,7 @@
 mod common;
 
+use corewlan::CoreWlanError;
+
 #[test]
 fn interface_read_only_snapshot_smoke() {
     if let Some(interface) = common::default_interface() {
@@ -24,5 +26,23 @@ fn interface_mutating_apis_compile_and_dispatch() {
         if let Some(configuration) = interface.configuration() {
             let _ = interface.commit_configuration(&configuration, None);
         }
+    }
+}
+
+#[test]
+fn scan_by_name_rejects_interior_nul_without_scanning() {
+    if let Some(interface) = common::default_interface() {
+        assert_eq!(
+            interface
+                .scan_for_networks_with_name(Some("corewlan\0rs"))
+                .map(|networks| networks.len()),
+            Err(CoreWlanError::InteriorNul("name"))
+        );
+        assert_eq!(
+            interface
+                .scan_for_networks_with_name_include_hidden(Some("corewlan\0rs"), true)
+                .map(|networks| networks.len()),
+            Err(CoreWlanError::InteriorNul("name"))
+        );
     }
 }

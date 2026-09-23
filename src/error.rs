@@ -19,6 +19,7 @@ pub enum CoreWlanError {
         operation: &'static str,
         status: i32,
     },
+    InteriorNul(&'static str),
 }
 
 impl fmt::Display for CoreWlanError {
@@ -34,6 +35,9 @@ impl fmt::Display for CoreWlanError {
             } => write!(f, "{operation} failed: {domain} ({code}) — {description}"),
             Self::OsStatusError { operation, status } => {
                 write!(f, "{operation} failed with OSStatus {status}")
+            }
+            Self::InteriorNul(argument) => {
+                write!(f, "{argument} contains an interior NUL byte")
             }
         }
     }

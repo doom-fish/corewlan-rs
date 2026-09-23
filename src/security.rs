@@ -5,8 +5,9 @@ use crate::{
     network::Network,
     object::{
         collect_array, collect_set, optional_ptr, os_status_result, take_string_object,
-        to_c_string_bytes, RetainedObject,
+        RetainedObject,
     },
+    secret::{take_secret_string_object, SecretCString, SecretString},
 };
 use bitflags::bitflags;
 use core::ptr;
@@ -252,7 +253,10 @@ pub fn merge_networks(networks: &[Network]) -> Vec<Network> {
 /// # Errors
 ///
 /// Returns an `OSStatus` error if the password cannot be read from the selected keychain domain.
-pub fn find_wifi_password(domain: KeychainDomain, ssid: &[u8]) -> crate::Result<Option<String>> {
+pub fn find_wifi_password(
+    domain: KeychainDomain,
+    ssid: &[u8],
+) -> crate::Result<Option<SecretString>> {
     let (ssid_ptr, ssid_len) = optional_ptr(Some(ssid));
     let mut password = ptr::null_mut();
     let status = unsafe {
@@ -263,22 +267,24 @@ pub fn find_wifi_password(domain: KeychainDomain, ssid: &[u8]) -> crate::Result<
             &mut password,
         )
     };
+    let password = unsafe { take_secret_string_object(password) };
     os_status_result(status, "CWKeychainFindWiFiPassword")?;
-    Ok(unsafe { take_string_object(password) })
+    Ok(password)
 }
 
 /// # Errors
 ///
-/// Returns an `OSStatus` error if the password cannot be stored in the selected keychain domain.
+/// Returns [`crate::CoreWlanError::InteriorNul`] if `password` contains a NUL byte, or an
+/// `OSStatus` error if the password cannot be stored in the selected keychain domain.
 pub fn set_wifi_password(domain: KeychainDomain, ssid: &[u8], password: &str) -> crate::Result<()> {
     let (ssid_ptr, ssid_len) = optional_ptr(Some(ssid));
-    let password = to_c_string_bytes(password);
+    let password = SecretCString::new(password, "password")?;
     let status = unsafe {
         crate::ffi::cwrs_keychain_set_wifi_password(
             domain.as_raw(),
             ssid_ptr,
             ssid_len,
-            password.as_ptr().cast(),
+            password.as_ptr(),
         )
     };
     os_status_result(status, "CWKeychainSetWiFiPassword")
@@ -301,7 +307,7 @@ pub fn delete_wifi_password(domain: KeychainDomain, ssid: &[u8]) -> crate::Resul
 pub fn find_wifi_eap_username_and_password(
     domain: KeychainDomain,
     ssid: &[u8],
-) -> crate::Result<(Option<String>, Option<String>)> {
+) -> crate::Result<(Option<String>, Option<SecretString>)> {
     let (ssid_ptr, ssid_len) = optional_ptr(Some(ssid));
     let mut username = ptr::null_mut();
     let mut password = ptr::null_mut();
@@ -314,15 +320,16 @@ pub fn find_wifi_eap_username_and_password(
             &mut password,
         )
     };
+    let username = unsafe { take_string_object(username) };
+    let password = unsafe { take_secret_string_object(password) };
     os_status_result(status, "CWKeychainFindWiFiEAPUsernameAndPassword")?;
-    Ok((unsafe { take_string_object(username) }, unsafe {
-        take_string_object(password)
-    }))
+    Ok((username, password))
 }
 
 /// # Errors
 ///
-/// Returns an `OSStatus` error if the credentials cannot be stored in the selected keychain domain.
+/// Returns [`crate::CoreWlanError::InteriorNul`] if `username` or `password` contains a NUL
+/// byte, or an `OSStatus` error if the credentials cannot be stored in the selected keychain domain.
 pub fn set_wifi_eap_username_and_password(
     domain: KeychainDomain,
     ssid: &[u8],
@@ -330,19 +337,19 @@ pub fn set_wifi_eap_username_and_password(
     password: Option<&str>,
 ) -> crate::Result<()> {
     let (ssid_ptr, ssid_len) = optional_ptr(Some(ssid));
-    let username = username.map(to_c_string_bytes);
-    let password = password.map(to_c_string_bytes);
+    let username = username
+        .map(|username| SecretCString::new(username, "username"))
+        .transpose()?;
+    let password = password
+        .map(|password| SecretCString::new(password, "password"))
+        .transpose()?;
     let status = unsafe {
         crate::ffi::cwrs_keychain_set_wifi_eap_username_and_password(
             domain.as_raw(),
             ssid_ptr,
             ssid_len,
-            username
-                .as_ref()
-                .map_or(ptr::null(), |value| value.as_ptr().cast()),
-            password
-                .as_ref()
-                .map_or(ptr::null(), |value| value.as_ptr().cast()),
+            username.as_ref().map_or(ptr::null(), SecretCString::as_ptr),
+            password.as_ref().map_or(ptr::null(), SecretCString::as_ptr),
         )
     };
     os_status_result(status, "CWKeychainSetWiFiEAPUsernameAndPassword")

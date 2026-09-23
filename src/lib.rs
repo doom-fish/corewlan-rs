@@ -9,6 +9,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod object;
+mod secret;
 
 pub mod channel;
 pub mod client;
@@ -33,6 +34,7 @@ pub use mutable_configuration::MutableConfiguration;
 pub use mutable_network_profile::MutableNetworkProfile;
 pub use network::Network;
 pub use network_profile::NetworkProfile;
+pub use secret::SecretString;
 pub use security::{
     bssid_did_change_notification, copy_eap_identity_list, copy_wifi_eap_identity,
     country_code_did_change_notification, delete_wifi_eap_username_and_password,
@@ -57,6 +59,7 @@ pub mod prelude {
     pub use crate::mutable_network_profile::MutableNetworkProfile;
     pub use crate::network::Network;
     pub use crate::network_profile::NetworkProfile;
+    pub use crate::secret::SecretString;
     pub use crate::security::{
         bssid_did_change_notification, copy_eap_identity_list, copy_wifi_eap_identity,
         country_code_did_change_notification, delete_wifi_eap_username_and_password,

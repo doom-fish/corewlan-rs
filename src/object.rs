@@ -170,17 +170,6 @@ pub const fn null_err<T>(what: &'static str) -> crate::Result<T> {
     Err(CoreWlanError::UnexpectedNull(what))
 }
 
-pub fn to_c_string_bytes(value: &str) -> Vec<u8> {
-    let mut bytes = value
-        .as_bytes()
-        .iter()
-        .copied()
-        .filter(|byte| *byte != 0)
-        .collect::<Vec<_>>();
-    bytes.push(0);
-    bytes
-}
-
 pub fn optional_ptr<T>(value: Option<&[T]>) -> (*const T, usize) {
     value.map_or((ptr::null(), 0), |slice| (slice.as_ptr(), slice.len()))
 }

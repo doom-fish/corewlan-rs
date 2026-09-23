@@ -3,7 +3,7 @@
 use crate::{
     error::CoreWlanError,
     interface::Interface,
-    object::{bool_result, collect_array, take_string_object, to_c_string_bytes, RetainedObject},
+    object::{bool_result, collect_array, take_string_object, RetainedObject},
     security::EventType,
     Result,
 };
@@ -12,7 +12,7 @@ use core::{
     ptr,
 };
 use std::{
-    ffi::CStr,
+    ffi::{CStr, CString},
     panic::{catch_unwind, AssertUnwindSafe},
     sync::Arc,
 };
@@ -205,13 +205,11 @@ impl WiFiClient {
 
     #[must_use]
     pub fn interface_with_name(&self, name: Option<&str>) -> Option<Interface> {
-        let name_bytes = name.map(to_c_string_bytes);
+        let name = name.map(CString::new).transpose().ok()?;
         unsafe {
             Interface::from_owned_raw(crate::ffi::cwrs_wifi_client_interface_with_name(
                 self.as_raw(),
-                name_bytes
-                    .as_ref()
-                    .map_or(ptr::null(), |value| value.as_ptr().cast()),
+                name.as_ref().map_or(ptr::null(), |name| name.as_ptr()),
             ))
         }
     }

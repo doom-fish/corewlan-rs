@@ -3,15 +3,18 @@
 use crate::{
     channel::Channel,
     configuration::Configuration,
+    error::CoreWlanError,
     network::Network,
     object::{
         bool_result, collect_set, error_from_raw, null_err, optional_ptr, take_data_object,
-        take_string_object, to_c_string_bytes, RetainedObject,
+        take_string_object, RetainedObject,
     },
+    secret::SecretCString,
     security::{Authorization, CipherKeyFlags, Identity, InterfaceMode, PhyMode, Security},
     Result,
 };
 use core::ptr;
+use std::ffi::CString;
 
 #[derive(Debug, Clone)]
 pub struct Interface {
@@ -164,7 +167,7 @@ impl Interface {
     ///
     /// # Errors
     ///
-    /// Returns any `NSError` reported by `CoreWLAN`.
+    /// Returns [`CoreWlanError::InteriorNul`] if `name` contains a NUL byte, or any `NSError` reported by `CoreWLAN`.
     pub fn scan_for_networks_with_name(&self, name: Option<&str>) -> Result<Vec<Network>> {
         self.scan_for_networks_with_name_inner(name, None)
     }
@@ -173,7 +176,7 @@ impl Interface {
     ///
     /// # Errors
     ///
-    /// Returns any `NSError` reported by `CoreWLAN`.
+    /// Returns [`CoreWlanError::InteriorNul`] if `name` contains a NUL byte, or any `NSError` reported by `CoreWLAN`.
     pub fn scan_for_networks_with_name_include_hidden(
         &self,
         name: Option<&str>,
@@ -187,14 +190,14 @@ impl Interface {
         name: Option<&str>,
         include_hidden: Option<bool>,
     ) -> Result<Vec<Network>> {
-        let name_bytes = name.map(to_c_string_bytes);
+        let name = name
+            .map(|name| CString::new(name).map_err(|_| CoreWlanError::InteriorNul("name")))
+            .transpose()?;
         let mut error = ptr::null_mut();
         let raw = unsafe {
             crate::ffi::cwrs_interface_scan_for_networks_with_name(
                 self.as_raw(),
-                name_bytes
-                    .as_ref()
-                    .map_or(ptr::null(), |value| value.as_ptr().cast()),
+                name.as_ref().map_or(ptr::null(), |name| name.as_ptr()),
                 include_hidden.unwrap_or(false),
                 include_hidden.is_some(),
                 &mut error,
@@ -323,17 +326,17 @@ impl Interface {
     ///
     /// # Errors
     ///
-    /// Returns any `NSError` reported by `CoreWLAN`.
+    /// Returns [`CoreWlanError::InteriorNul`] if `password` contains a NUL byte, or any `NSError` reported by `CoreWLAN`.
     pub fn associate_to_network(&self, network: &Network, password: Option<&str>) -> Result<()> {
-        let password_bytes = password.map(to_c_string_bytes);
+        let password = password
+            .map(|password| SecretCString::new(password, "password"))
+            .transpose()?;
         let mut error = ptr::null_mut();
         let ok = unsafe {
             crate::ffi::cwrs_interface_associate_to_network(
                 self.as_raw(),
                 network.as_raw(),
-                password_bytes
-                    .as_ref()
-                    .map_or(ptr::null(), |value| value.as_ptr().cast()),
+                password.as_ref().map_or(ptr::null(), SecretCString::as_ptr),
                 &mut error,
             )
         };
@@ -350,7 +353,7 @@ impl Interface {
     ///
     /// # Errors
     ///
-    /// Returns any `NSError` reported by `CoreWLAN`.
+    /// Returns [`CoreWlanError::InteriorNul`] if `username` or `password` contains a NUL byte, or any `NSError` reported by `CoreWLAN`.
     pub fn associate_to_enterprise_network(
         &self,
         network: &Network,
@@ -358,20 +361,20 @@ impl Interface {
         username: Option<&str>,
         password: Option<&str>,
     ) -> Result<()> {
-        let username_bytes = username.map(to_c_string_bytes);
-        let password_bytes = password.map(to_c_string_bytes);
+        let username = username
+            .map(|username| SecretCString::new(username, "username"))
+            .transpose()?;
+        let password = password
+            .map(|password| SecretCString::new(password, "password"))
+            .transpose()?;
         let mut error = ptr::null_mut();
         let ok = unsafe {
             crate::ffi::cwrs_interface_associate_to_enterprise_network(
                 self.as_raw(),
                 network.as_raw(),
                 identity.map_or(ptr::null_mut(), Identity::as_raw),
-                username_bytes
-                    .as_ref()
-                    .map_or(ptr::null(), |value| value.as_ptr().cast()),
-                password_bytes
-                    .as_ref()
-                    .map_or(ptr::null(), |value| value.as_ptr().cast()),
+                username.as_ref().map_or(ptr::null(), SecretCString::as_ptr),
+                password.as_ref().map_or(ptr::null(), SecretCString::as_ptr),
                 &mut error,
             )
         };

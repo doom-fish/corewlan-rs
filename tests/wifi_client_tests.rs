@@ -55,3 +55,14 @@ fn wifi_client_event_monitoring_smoke() {
         .stop_monitoring_event(EventType::PowerDidChange)
         .expect("event unregistration should succeed");
 }
+
+#[test]
+fn interface_with_name_containing_nul_matches_nothing() {
+    let _lock = common::corewlan_test_lock();
+    let client = WiFiClient::shared().expect("shared client should exist");
+    assert!(client.interface_with_name(Some("en\0")).is_none());
+    for name in client.interface_names() {
+        let with_nul = format!("{name}\0");
+        assert!(client.interface_with_name(Some(&with_nul)).is_none());
+    }
+}

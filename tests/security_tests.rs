@@ -3,8 +3,9 @@ use corewlan::{
     link_did_change_notification, link_quality_did_change_notification,
     link_quality_notification_rssi_key, link_quality_notification_transmit_rate_key,
     merge_networks, mode_did_change_notification, power_did_change_notification,
-    scan_cache_did_update_notification, ssid_did_change_notification, CipherKeyFlags, ErrorCode,
-    EventType, InterfaceMode, PhyMode, Security,
+    scan_cache_did_update_notification, set_wifi_eap_username_and_password, set_wifi_password,
+    ssid_did_change_notification, CipherKeyFlags, CoreWlanError, ErrorCode, EventType,
+    InterfaceMode, KeychainDomain, PhyMode, Security,
 };
 
 #[test]
@@ -31,4 +32,41 @@ fn constants_are_non_empty() {
     assert!(!link_quality_notification_transmit_rate_key().is_empty());
     assert_eq!(CipherKeyFlags::UNICAST.bits(), 1 << 1);
     assert!(merge_networks(&[]).is_empty());
+}
+
+#[test]
+fn set_wifi_password_rejects_interior_nul_before_touching_the_keychain() {
+    assert_eq!(
+        set_wifi_password(KeychainDomain::User, b"corewlan-rs-nul-test", "pass\0word"),
+        Err(CoreWlanError::InteriorNul("password"))
+    );
+}
+
+#[test]
+fn set_wifi_eap_credentials_reject_interior_nul_before_touching_the_keychain() {
+    assert_eq!(
+        set_wifi_eap_username_and_password(
+            KeychainDomain::User,
+            b"corewlan-rs-nul-test",
+            Some("user\0name"),
+            Some("password"),
+        ),
+        Err(CoreWlanError::InteriorNul("username"))
+    );
+    assert_eq!(
+        set_wifi_eap_username_and_password(
+            KeychainDomain::User,
+            b"corewlan-rs-nul-test",
+            Some("username"),
+            Some("pass\0word"),
+        ),
+        Err(CoreWlanError::InteriorNul("password"))
+    );
+}
+
+#[test]
+fn interior_nul_error_message_names_the_argument_only() {
+    let message = CoreWlanError::InteriorNul("password").to_string();
+    assert!(message.contains("password"));
+    assert!(message.contains("NUL"));
 }
