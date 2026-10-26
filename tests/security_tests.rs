@@ -19,19 +19,19 @@ fn enum_round_trips_preserve_raw_values() {
 
 #[test]
 fn constants_are_non_empty() {
-    assert!(!error_domain().is_empty());
-    assert!(!power_did_change_notification().is_empty());
-    assert!(!ssid_did_change_notification().is_empty());
-    assert!(!bssid_did_change_notification().is_empty());
-    assert!(!link_did_change_notification().is_empty());
-    assert!(!mode_did_change_notification().is_empty());
-    assert!(!country_code_did_change_notification().is_empty());
-    assert!(!scan_cache_did_update_notification().is_empty());
-    assert!(!link_quality_did_change_notification().is_empty());
-    assert!(!link_quality_notification_rssi_key().is_empty());
-    assert!(!link_quality_notification_transmit_rate_key().is_empty());
+    assert_ne!(error_domain(), "");
+    assert_ne!(power_did_change_notification(), "");
+    assert_ne!(ssid_did_change_notification(), "");
+    assert_ne!(bssid_did_change_notification(), "");
+    assert_ne!(link_did_change_notification(), "");
+    assert_ne!(mode_did_change_notification(), "");
+    assert_ne!(country_code_did_change_notification(), "");
+    assert_ne!(scan_cache_did_update_notification(), "");
+    assert_ne!(link_quality_did_change_notification(), "");
+    assert_ne!(link_quality_notification_rssi_key(), "");
+    assert_ne!(link_quality_notification_transmit_rate_key(), "");
     assert_eq!(CipherKeyFlags::UNICAST.bits(), 1 << 1);
-    assert!(merge_networks(&[]).is_empty());
+    assert_eq!(merge_networks(&[]), [] as [corewlan::Network; 0]);
 }
 
 #[test]

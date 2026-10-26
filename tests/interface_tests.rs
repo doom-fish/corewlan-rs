@@ -16,7 +16,7 @@ fn interface_read_only_snapshot_smoke() {
         let name = interface
             .interface_name()
             .expect("the default interface has a BSD name");
-        assert!(!name.is_empty());
+        assert_ne!(name, "");
         if let Some(address) = interface.hardware_address() {
             assert!(
                 is_mac_address(&address),
